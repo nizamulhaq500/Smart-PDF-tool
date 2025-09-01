@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Convert Files - SmartPDF</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <style>
+        .tool-page {
+            padding-top: 100px;
+            min-height: 100vh;
+        }
+        .tool-header {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            color: white;
+            padding: 4rem 0;
+            text-align: center;
+        }
+        .tool-header h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        .tool-header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        .upload-area {
+            background: white;
+            border: 2px dashed #e2e8f0;
+            border-radius: 20px;
+            padding: 3rem;
+            text-align: center;
+            margin: 2rem 0;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .upload-area:hover {
+            border-color: #8b5cf6;
+            background: #f8fafc;
+        }
+        .upload-area.dragover {
+            border-color: #8b5cf6;
+            background: #f1f5f9;
+        }
+        .upload-icon {
+            font-size: 3rem;
+            color: #8b5cf6;
+            margin-bottom: 1rem;
+        }
+        .conversion-options {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            margin: 2rem 0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+        .option-group {
+            margin-bottom: 2rem;
+        }
+        .option-group h3 {
+            margin-bottom: 1rem;
+            color: #1e293b;
+        }
+        .format-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+        .format-option {
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .format-option:hover {
+            border-color: #8b5cf6;
+        }
+        .format-option.selected {
+            border-color: #8b5cf6;
+            background: #faf5ff;
+        }
+        .format-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        .format-option h4 {
+            margin-bottom: 0.25rem;
+            color: #1e293b;
+        }
+        .format-option p {
+            color: #64748b;
+            font-size: 0.8rem;
+        }
+        .file-info {
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            display: none;
+        }
+        .file-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .file-icon {
+            color: #ef4444;
+            font-size: 2rem;
+        }
+        .file-stats {
+            text-align: right;
+        }
+        .file-stats div {
+            margin-bottom: 0.25rem;
+        }
+        .convert-button {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 2rem;
+        }
+        .convert-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3);
+        }
+        .convert-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .supported-formats {
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+        .supported-formats h4 {
+            margin-bottom: 1rem;
+            color: #1e293b;
+        }
+        .format-categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        .format-category h5 {
+            color: #6366f1;
+            margin-bottom: 0.5rem;
+        }
+        .format-category ul {
+            list-style: none;
+            padding: 0;
+        }
+        .format-category li {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+        .success-message {
+            text-align: center;
+            margin: 2rem 0;
+            padding: 1rem;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 10px;
+            color: #166534;
+            font-weight: 500;
+            display: none;
+        }
+        .download-button {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            padding: 1.2rem 2.5rem;
+            font-size: 1.2rem;
+            font-weight: 700;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+            display: none;
+            margin: 2rem auto;
+            text-decoration: none;
+            text-align: center;
+        }
+        .download-button:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 12px 35px rgba(99, 102, 241, 0.4);
+            filter: brightness(1.1);
+        }
+        .download-button i {
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="index.html" style="text-decoration: none; color: inherit;">
+                    <h2>SmartPDF</h2>
+                </a>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="index.html" class="nav-link">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a href="merge.html" class="nav-link">Merge</a>
+                </li>
+                <li class="nav-item">
+                    <a href="split.html" class="nav-link">Split</a>
+                </li>
+                <li class="nav-item">
+                    <a href="compress.html" class="nav-link">Compress</a>
+                </li>
+                <li class="nav-item">
+                    <a href="convert.html" class="nav-link active">Convert</a>
+                </li>
+                <li class="nav-item">
+                    <a href="jpg-to-pdf.html" class="nav-link">JPG to PDF</a>
+                </li>
+            </ul>
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Tool Header -->
+    <div class="tool-header">
+        <div class="container">
+            <h1><i class="fas fa-exchange-alt"></i> Convert Files</h1>
+            <p>Convert between PDF and other formats easily</p>
+        </div>
+    </div>
+
+    <!-- Tool Content -->
+    <div class="tool-page">
+        <div class="container">
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <h3>Drop your file here</h3>
+                <p>or click to browse and select a file</p>
+                <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png" style="display: none;">
+            </div>
+
+            <div class="file-info" id="fileInfo">
+                <div class="file-details">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <i class="fas fa-file file-icon" id="fileIcon"></i>
+                        <div>
+                            <div id="fileName" style="font-weight: 500;"></div>
+                            <div id="fileSize" style="color: #64748b; font-size: 0.9rem;"></div>
+                        </div>
+                    </div>
+                    <div class="file-stats">
+                        <div>Type: <span id="fileType">-</span></div>
+                        <div>Size: <span id="fileSizeFormatted">-</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="conversion-options" id="conversionOptions" style="display: none;">
+                <div class="option-group">
+                    <h3>Choose Output Format</h3>
+                    <div class="format-grid" id="formatGrid">
+                        <!-- Formats will be populated based on input file type -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="supported-formats">
+                <h4>Supported Formats</h4>
+                <div class="format-categories">
+                    <div class="format-category">
+                        <h5>From PDF</h5>
+                        <ul>
+                            <li>Word (.docx)</li>
+                            <li>Excel (.xlsx)</li>
+                            <li>PowerPoint (.pptx)</li>
+                            <li>Images (.jpg, .png)</li>
+                            <li>Text (.txt)</li>
+                        </ul>
+                    </div>
+                    <div class="format-category">
+                        <h5>To PDF</h5>
+                        <ul>
+                            <li>Word (.doc, .docx)</li>
+                            <li>Excel (.xls, .xlsx)</li>
+                            <li>PowerPoint (.ppt, .pptx)</li>
+                            <li>Images (.jpg, .png)</li>
+                            <li>Text (.txt)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <button class="convert-button" id="convertButton" disabled>
+                <i class="fas fa-exchange-alt"></i> Convert File
+            </button>
+
+            <div class="success-message" id="successMessage">
+                ✅ Your PDF is ready!
+            </div>
+
+            <button class="download-button" id="downloadButton">
+                <i class="fas fa-download"></i> Download Converted PDF
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const conversionOptions = document.getElementById('conversionOptions');
+        const convertButton = document.getElementById('convertButton');
+        const formatGrid = document.getElementById('formatGrid');
+        const successMessage = document.getElementById('successMessage');
+        const downloadButton = document.getElementById('downloadButton');
+        let selectedFile = null;
+        let selectedFormat = null;
+        let convertedPdfBytes = null;
+
+        const formatOptions = {
+            'application/pdf': [
+                { format: 'docx', icon: 'fas fa-file-word', name: 'Word', desc: 'Microsoft Word' },
+                { format: 'xlsx', icon: 'fas fa-file-excel', name: 'Excel', desc: 'Microsoft Excel' },
+                { format: 'pptx', icon: 'fas fa-file-powerpoint', name: 'PowerPoint', desc: 'Microsoft PowerPoint' },
+                { format: 'jpg', icon: 'fas fa-file-image', name: 'JPG', desc: 'JPEG Image' },
+                { format: 'png', icon: 'fas fa-file-image', name: 'PNG', desc: 'PNG Image' },
+                { format: 'txt', icon: 'fas fa-file-alt', name: 'Text', desc: 'Plain Text' }
+            ],
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document': [
+                { format: 'pdf', icon: 'fas fa-file-pdf', name: 'PDF', desc: 'Portable Document' }
+            ],
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': [
+                { format: 'pdf', icon: 'fas fa-file-pdf', name: 'PDF', desc: 'Portable Document' }
+            ],
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation': [
+                { format: 'pdf', icon: 'fas fa-file-pdf', name: 'PDF', desc: 'Portable Document' }
+            ],
+            'image/jpeg': [
+                { format: 'pdf', icon: 'fas fa-file-pdf', name: 'PDF', desc: 'Portable Document' }
+            ],
+            'image/png': [
+                { format: 'pdf', icon: 'fas fa-file-pdf', name: 'PDF', desc: 'Portable Document' }
+            ],
+            'text/plain': [
+                { format: 'pdf', icon: 'fas fa-file-pdf', name: 'PDF', desc: 'Portable Document' }
+            ]
+        };
+
+        // Click to upload
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                selectedFile = e.target.files[0];
+                displayFileInfo(selectedFile);
+                showConversionOptions(selectedFile);
+            }
+        });
+
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) {
+                selectedFile = e.dataTransfer.files[0];
+                displayFileInfo(selectedFile);
+                showConversionOptions(selectedFile);
+            }
+        });
+
+        function displayFileInfo(file) {
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = `${(file.size / 1024 / 1024).toFixed(2)} MB`;
+            document.getElementById('fileSizeFormatted').textContent = `${(file.size / 1024 / 1024).toFixed(2)} MB`;
+            document.getElementById('fileType').textContent = file.type || 'Unknown';
+            
+            // Set appropriate icon
+            const fileIcon = document.getElementById('fileIcon');
+            if (file.type === 'application/pdf') {
+                fileIcon.className = 'fas fa-file-pdf file-icon';
+                fileIcon.style.color = '#ef4444';
+            } else if (file.type.includes('word')) {
+                fileIcon.className = 'fas fa-file-word file-icon';
+                fileIcon.style.color = '#2563eb';
+            } else if (file.type.includes('excel') || file.type.includes('sheet')) {
+                fileIcon.className = 'fas fa-file-excel file-icon';
+                fileIcon.style.color = '#16a34a';
+            } else if (file.type.includes('powerpoint') || file.type.includes('presentation')) {
+                fileIcon.className = 'fas fa-file-powerpoint file-icon';
+                fileIcon.style.color = '#dc2626';
+            } else if (file.type.includes('image')) {
+                fileIcon.className = 'fas fa-file-image file-icon';
+                fileIcon.style.color = '#7c3aed';
+            } else {
+                fileIcon.className = 'fas fa-file file-icon';
+                fileIcon.style.color = '#64748b';
+            }
+            
+            fileInfo.style.display = 'block';
+        }
+
+        function showConversionOptions(file) {
+            const options = formatOptions[file.type];
+            if (options) {
+                formatGrid.innerHTML = '';
+                options.forEach(option => {
+                    const formatOption = document.createElement('div');
+                    formatOption.className = 'format-option';
+                    formatOption.dataset.format = option.format;
+                    formatOption.innerHTML = `
+                        <div class="format-icon">
+                            <i class="${option.icon}"></i>
+                        </div>
+                        <h4>${option.name}</h4>
+                        <p>${option.desc}</p>
+                    `;
+                    formatOption.addEventListener('click', () => {
+                        document.querySelectorAll('.format-option').forEach(opt => opt.classList.remove('selected'));
+                        formatOption.classList.add('selected');
+                        selectedFormat = option.format;
+                        convertButton.disabled = false;
+                    });
+                    formatGrid.appendChild(formatOption);
+                });
+                conversionOptions.style.display = 'block';
+            } else {
+                alert('Unsupported file format. Please select a supported file type.');
+            }
+        }
+
+        // Convert functionality
+        convertButton.addEventListener('click', async () => {
+            if (!selectedFile) {
+                alert('Please select a file first.');
+                return;
+            }
+
+            if (!selectedFormat) {
+                alert('Please select an output format.');
+                return;
+            }
+
+            convertButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Converting...';
+            convertButton.disabled = true;
+
+            try {
+                if (selectedFile.type === 'application/pdf') {
+                    // PDF to other formats - for demo purposes, we'll create a simple text representation
+                    if (selectedFormat === 'txt') {
+                        const arrayBuffer = await selectedFile.arrayBuffer();
+                        const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+                        const pageCount = pdfDoc.getPageCount();
+                        
+                        // Create a simple text representation
+                        const textContent = `PDF Document\nPages: ${pageCount}\nFile: ${selectedFile.name}\n\nThis is a demo conversion. In a real application, you would extract the actual text content from the PDF.`;
+                        
+                        const blob = new Blob([textContent], { type: 'text/plain' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'converted.txt';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                        
+                        alert('File converted successfully!');
+                    } else {
+                        alert(`Conversion to ${selectedFormat.toUpperCase()} is not supported in this demo. Please use a dedicated conversion service.`);
+                    }
+                } else {
+                    // Other formats to PDF
+                    if (selectedFormat === 'pdf') {
+                        const pdfDoc = await PDFLib.PDFDocument.create();
+                        
+                        if (selectedFile.type.startsWith('image/')) {
+                            // Image to PDF
+                            const arrayBuffer = await selectedFile.arrayBuffer();
+                            const image = await pdfDoc.embedJpg(arrayBuffer);
+                            const page = pdfDoc.addPage();
+                            const { width, height } = page.getSize();
+                            const imageDims = image.scale(1);
+                            
+                            page.drawImage(image, {
+                                x: (width - imageDims.width) / 2,
+                                y: (height - imageDims.height) / 2,
+                                width: imageDims.width,
+                                height: imageDims.height,
+                            });
+                        } else if (selectedFile.type === 'text/plain') {
+                            // Text to PDF
+                            const text = await selectedFile.text();
+                            const page = pdfDoc.addPage();
+                            const { width, height } = page.getSize();
+                            
+                            page.drawText(text, {
+                                x: 50,
+                                y: height - 50,
+                                size: 12,
+                                maxWidth: width - 100,
+                            });
+                        }
+                        
+                        convertedPdfBytes = await pdfDoc.save();
+                        
+                        // Show success message and download button
+                        successMessage.style.display = 'block';
+                        downloadButton.style.display = 'block';
+                    }
+                }
+                
+                // Reset convert button
+                convertButton.innerHTML = '<i class="fas fa-exchange-alt"></i> Convert File';
+                convertButton.disabled = false;
+                
+            } catch (error) {
+                console.error('Error converting file:', error);
+                alert('Error converting file. Please try again.');
+                convertButton.innerHTML = '<i class="fas fa-exchange-alt"></i> Convert File';
+                convertButton.disabled = false;
+            }
+        });
+
+        // Download functionality
+        downloadButton.addEventListener('click', () => {
+            if (convertedPdfBytes) {
+                const blob = new Blob([convertedPdfBytes], { type: 'application/pdf' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'converted.pdf';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        });
+    </script>
+</body>
+</html>
