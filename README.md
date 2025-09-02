@@ -30,4 +30,4 @@ Built with HTML, CSS, JavaScript, and ready for AI integration (API) in the futu
 
 ---
 
-## 📂 Project Structure
+
